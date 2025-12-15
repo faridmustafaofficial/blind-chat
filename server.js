@@ -6,42 +6,50 @@ const path = require('path');
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-let waitingUser = null; // Növbədə gözləyən istifadəçi
+let waitingUser = null;
 
 io.on('connection', (socket) => {
-    console.log('Bir istifadəçi qoşuldu:', socket.id);
+    console.log('İstifadəçi qoşuldu:', socket.id);
 
     socket.on('find_match', () => {
         if (waitingUser) {
-            // Əgər kimsə gözləyirsə, onları birləşdir
             const partnerId = waitingUser.id;
-            
-            // Hər iki tərəfə tərəfdaş tapıldığı barədə məlumat ver
             socket.emit('match_found', { role: 'initiator', partner: partnerId });
             waitingUser.emit('match_found', { role: 'receiver', partner: socket.id });
-            
-            waitingUser = null; // Növbəni təmizlə
+            waitingUser = null;
         } else {
-            // Heç kim yoxdursa, bu istifadəçini növbəyə qoy
             waitingUser = socket;
-            socket.emit('waiting', 'Başqa bir istifadəçi axtarılır...');
+            socket.emit('waiting', 'Axtarılır...');
         }
     });
 
-    // WebRTC Siqnalizasiya (Offer, Answer, ICE Candidates)
-    // Bu hissə səsin qurulması üçün məlumatları birindən digərinə ötürür
     socket.on('signal', (data) => {
-        io.to(data.target).emit('signal', {
-            sender: socket.id,
-            signal: data.signal
-        });
+        io.to(data.target).emit('signal', { sender: socket.id, signal: data.signal });
     });
+
+    // --- YENİ HİSSƏLƏR ---
+
+    // İstifadəçi "DAYAN" basanda və ya axtarışdan imtina edəndə növbədən çıxar
+    socket.on('leave_queue', () => {
+        if (waitingUser === socket) {
+            waitingUser = null;
+        }
+    });
+
+    // İstifadəçi çıxanda partnyora xəbər ver
+    socket.on('disconnect_partner', (partnerId) => {
+        io.to(partnerId).emit('partner_disconnected');
+    });
+
+    // --- YENİ HİSSƏLƏRİN SONU ---
 
     socket.on('disconnect', () => {
         if (waitingUser === socket) {
             waitingUser = null;
         }
-        // Real layihədə burada partnyora "qarşı tərəf çıxdı" mesajı göndərilməlidir
+        // Qeyd: Real layihədə əgər istifadəçi aktiv söhbətdə ikən brauzeri bağlayarsa, 
+        // onun partnyorunu tapıb 'partner_disconnected' göndərmək lazımdır. 
+        // Bu versiyada sadəlik üçün bunu 'script.js'-dəki 'disconnect_partner'-ə həvalə edirik.
     });
 });
 
