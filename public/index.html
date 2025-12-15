@@ -3,14 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anonim Səsli Söhbət</title>
+    <title>Blind Voice Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Blind Voice Chat</h1>
-        <div id="status">Söhbətə başlamaq üçün düyməni bas.</div>
-        <button id="startBtn">Söhbət Axtar</button>
+    <div class="main-container">
+        <div class="voice-card">
+            <div class="mic-wrapper">
+                <div class="mic-pulse"></div>
+                <i class="fa-solid fa-microphone mic-icon"></i>
+            </div>
+            <h2 id="status-text">Söhbətə başla</h2>
+        </div>
+        
+        <div class="controls">
+            <button id="nextBtn" class="btn btn-next">NÖVBƏTİ</button>
+            <button id="stopBtn" class="btn btn-stop" disabled>DAYAN</button>
+        </div>
         
         <audio id="remoteAudio" autoplay></audio>
     </div>
